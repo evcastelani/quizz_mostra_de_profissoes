@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Quiz com Temporizador</title>
+        <style>
+            body {
+                font-family: "Segoe UI", sans-serif;
+                background: linear-gradient(135deg, #7f7fd5, #86a8e7, #91eae4);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0;
+            }
+
+            .quiz-container {
+                background: white;
+                border-radius: 12px;
+                padding: 2rem;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+                width: 400px;
+                text-align: center;
+            }
+
+            .question {
+                font-size: 1.2rem;
+                margin-bottom: 1rem;
+            }
+
+            .options {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .option-btn {
+                background: #f1f1f1;
+                border: none;
+                padding: 0.75rem;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: 0.2s;
+            }
+
+            .option-btn:hover {
+                background: #e0e0e0;
+            }
+
+            .option-btn.correct {
+                background: #9aeabc;
+            }
+
+            .option-btn.wrong {
+                background: #ffb3b3;
+            }
+
+            .timer {
+                font-weight: bold;
+                color: #444;
+                margin-top: 1rem;
+            }
+
+            .next-btn {
+                background: #4a90e2;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 0.6rem 1.2rem;
+                margin-top: 1rem;
+                cursor: pointer;
+                display: none;
+            }
+            .restart-btn {
+                background: #4a90e2;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 0.6rem 1.2rem;
+                margin-top: 1rem;
+                cursor: pointer;
+            }
+
+            .next-btn:hover {
+                background: #3d7ac0;
+            }
+
+            .score {
+                font-size: 1.4rem;
+                font-weight: bold;
+                color: #333;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="quiz-container">
+            <div id="quiz">
+                <div class="question" id="question"></div>
+                <div class="options" id="options"></div>
+                <div class="timer">
+                    Tempo restante: <span id="time">10</span>s
+                </div>
+                <button class="next-btn" id="next">Próxima</button>
+            </div>
+        </div>
+
+        <script>
+            const questions = [
+                {
+                    question:
+                        "Qual é o nome da linha que divide um círculo em duas partes iguais?",
+                    options: ["Raio", "Equador", "Diagonal", "Diâmetro"],
+                    answer: 3,
+                },
+                {
+                    question:
+                        "Qual é o nome da figura geométrica que tem cinco lados?",
+                    options: [
+                        "Retângulo",
+                        "Hexágono",
+                        "Pentágono",
+                        "Circunferência",
+                    ],
+                    answer: 2,
+                },
+                {
+                    question: "Qual é o resultado de 25% de 80?",
+                    options: ["25", "20", "100", "8"],
+                    answer: 1,
+                },
+
+                {
+                    question:
+                        "Qual é o nome da figura geométrica que possui seis lados?",
+                    options: ["Octógono", "Pentágono", "Hexágono", "Pitágoras"],
+                    answer: 2,
+                },
+                {
+                    question:
+                        "Uma enfermeira aplica um remédio que deve ser administrado em 0,5 ml por kg de peso corporal. Um paciente pesa 60 kg. Qual é a dose correta?",
+                    options: [
+                        "30 ml",
+                        "3 ml",
+                        "0,5 ml",
+                        "120 ml",
+                    ],
+                    answer: 0,
+                },
+                {
+                    question:
+                        "Qual é o número que está faltando na sequência: 1, 4, 9, 16, ___?",
+                    options: ["17", "22", "25", "26"],
+                    answer: 2,
+                },
+                {
+                    question: "Qual é o resultado de –3²?",
+                    options: ["6", "32", "-9", "9"],
+                    answer: 2,
+                },
+                {
+                    question:
+                        "Em quais dessas áreas a matemática é essencial para criar modelos e previsões?",
+                    options: [
+                        "Meteorologia",
+                        "Economia",
+                        "Inteligência Artificial",
+                        "Todas as anteriores",
+                    ],
+                    answer: 3,
+                },
+                {
+                    question:
+                        "Um engenheiro civil usa matemática principalmente para:",
+                    options: [
+                        "Criar fórmulas químicas",
+                        "Calcular estruturas, resistências e custos",
+                        "Projetar jardins",
+                        "Escrever relatórios",
+                    ],
+                    answer: 1,
+                },
+                {
+                    question: "Um cientista de dados aplica conceitos de:",
+                    options: [
+                        "Estatística e probabilidade",
+                        "Pintura e perspectiva",
+                        "História e filosofia",
+                        "Música e teatro",
+                    ],
+                    answer: 0,
+                },
+                {
+                    question:
+                        "Os algoritmos usados nas redes sociais e em aplicativos de streaming envolvem:",
+                    options: [
+                        "Estatística e álgebra",
+                        "Gramática e literatura",
+                        "Pintura e perspectiva",
+                        "Botânica e zoologia",
+                    ],
+                    answer: 0,
+                },
+            ];
+
+            const questionEl = document.getElementById("question");
+            const optionsEl = document.getElementById("options");
+            const nextBtn = document.getElementById("next");
+            const timeEl = document.getElementById("time");
+
+            let currentQuestion = 0;
+            let score = 0;
+            let timer;
+            let timeLeft = 10;
+
+            function startQuiz() {
+                currentQuestion = 0;
+                score = 0;
+                showQuestion();
+            }
+
+            function showQuestion() {
+                resetState();
+                const q = questions[currentQuestion];
+                questionEl.textContent = q.question;
+                q.options.forEach((option, index) => {
+                    const btn = document.createElement("button");
+                    btn.classList.add("option-btn");
+                    btn.textContent = option;
+                    btn.onclick = () => selectOption(index);
+                    optionsEl.appendChild(btn);
+                });
+                startTimer();
+            }
+
+            function resetState() {
+                clearInterval(timer);
+                nextBtn.style.display = "none";
+                optionsEl.innerHTML = "";
+                timeLeft = 10;
+                timeEl.textContent = timeLeft;
+            }
+
+            function startTimer() {
+                timer = setInterval(() => {
+                    timeLeft--;
+                    timeEl.textContent = timeLeft;
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        disableOptions();
+                        nextBtn.style.display = "inline-block";
+                    }
+                }, 1000);
+            }
+
+            function selectOption(index) {
+                clearInterval(timer);
+                const q = questions[currentQuestion];
+                const buttons = document.querySelectorAll(".option-btn");
+                buttons.forEach((btn, i) => {
+                    btn.disabled = true;
+                    if (i === q.answer) btn.classList.add("correct");
+                    else if (i === index) btn.classList.add("wrong");
+                });
+                if (index === q.answer) score++;
+                nextBtn.style.display = "inline-block";
+            }
+
+            function disableOptions() {
+                document
+                    .querySelectorAll(".option-btn")
+                    .forEach((btn) => (btn.disabled = true));
+            }
+
+            nextBtn.addEventListener("click", () => {
+                currentQuestion++;
+                if (currentQuestion < questions.length) {
+                    showQuestion();
+                } else {
+                    showScore();
+                }
+            });
+            function showScore() {
+                clearInterval(timer);
+                document.getElementById("quiz").innerHTML = `
+                  <div class="score">🎯 Você acertou ${score} de ${questions.length} questões!</div>
+                  <button class="restart-btn" id="restart" onclick="window.location.reload();">Reiniciar Quiz</button>
+                `;
+            }
+
+            startQuiz();
+        </script>
+    </body>
+</html>
