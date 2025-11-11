@@ -4,6 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Quiz com Temporizador</title>
+
         <style>
             body {
                 font-family: "Segoe UI", sans-serif;
@@ -24,17 +25,6 @@
                 text-align: center;
             }
 
-            .question {
-                font-size: 1.2rem;
-                margin-bottom: 1rem;
-            }
-
-            .options {
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-
             .option-btn {
                 background: #f1f1f1;
                 border: none;
@@ -42,67 +32,63 @@
                 border-radius: 8px;
                 cursor: pointer;
                 transition: 0.2s;
+                margin-top: 0.5rem;
+                width: 100%;
             }
 
             .option-btn:hover {
                 background: #e0e0e0;
             }
-
             .option-btn.correct {
                 background: #9aeabc;
             }
-
             .option-btn.wrong {
                 background: #ffb3b3;
             }
 
             .timer {
-                font-weight: bold;
-                color: #444;
                 margin-top: 1rem;
+                font-weight: bold;
+            }
+
+            .next-btn,
+            .restart-btn,
+            .start-btn {
+                background: #4a90e2;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 0.6rem 1.2rem;
+                margin-top: 1rem;
+                cursor: pointer;
             }
 
             .next-btn {
-                background: #4a90e2;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                padding: 0.6rem 1.2rem;
-                margin-top: 1rem;
-                cursor: pointer;
                 display: none;
             }
-            .restart-btn {
-                background: #4a90e2;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                padding: 0.6rem 1.2rem;
-                margin-top: 1rem;
-                cursor: pointer;
-            }
-
-            .next-btn:hover {
+            .next-btn:hover,
+            .restart-btn:hover,
+            .start-btn:hover {
                 background: #3d7ac0;
             }
 
             .score {
-                font-size: 1.4rem;
+                font-size: 1.3rem;
                 font-weight: bold;
-                color: #333;
+                margin-bottom: 1rem;
+            }
+
+            .intro {
+                font-size: 1.1rem;
+                font-weight: bold;
+                margin-bottom: 1.2rem;
             }
         </style>
     </head>
+
     <body>
         <div class="quiz-container">
-            <div id="quiz">
-                <div class="question" id="question"></div>
-                <div class="options" id="options"></div>
-                <div class="timer">
-                    Tempo restante: <span id="time">10</span>s
-                </div>
-                <button class="next-btn" id="next">Próxima</button>
-            </div>
+            <div id="quiz"></div>
         </div>
 
         <script>
@@ -139,12 +125,7 @@
                 {
                     question:
                         "Uma enfermeira aplica um remédio que deve ser administrado em 0,5 ml por kg de peso corporal. Um paciente pesa 60 kg. Qual é a dose correta?",
-                    options: [
-                        "30 ml",
-                        "3 ml",
-                        "0,5 ml",
-                        "120 ml",
-                    ],
+                    options: ["30 ml", "3 ml", "0,5 ml", "120 ml"],
                     answer: 0,
                 },
                 {
@@ -203,26 +184,56 @@
                 },
             ];
 
-            const questionEl = document.getElementById("question");
-            const optionsEl = document.getElementById("options");
-            const nextBtn = document.getElementById("next");
-            const timeEl = document.getElementById("time");
+            const quizContainer = document.getElementById("quiz");
 
             let currentQuestion = 0;
             let score = 0;
             let timer;
             let timeLeft = 10;
 
+            // ✅ TELA INICIAL
+            function showIntro() {
+                quizContainer.innerHTML = `
+                <div class="intro">
+                    🎉 Ao completar este quiz, você ganhará um brinde!! 🎉
+                </div>
+                <button class="start-btn" id="start">Iniciar Quiz</button>
+            `;
+                document
+                    .getElementById("start")
+                    .addEventListener("click", startQuiz);
+            }
+
+            // ✅ INICIA O QUIZ
             function startQuiz() {
+                quizContainer.innerHTML = `
+                <div class="question" id="question"></div>
+                <div class="options" id="options"></div>
+                <div class="timer">Tempo restante: <span id="time">10</span>s</div>
+                <button class="next-btn" id="next">Próxima</button>
+            `;
+
                 currentQuestion = 0;
                 score = 0;
+
+                // Recria referências
+                questionEl = document.getElementById("question");
+                optionsEl = document.getElementById("options");
+                nextBtn = document.getElementById("next");
+                timeEl = document.getElementById("time");
+
+                nextBtn.addEventListener("click", nextQuestion);
+
                 showQuestion();
             }
 
+            // ✅ EXIBE A QUESTÃO
             function showQuestion() {
                 resetState();
+
                 const q = questions[currentQuestion];
                 questionEl.textContent = q.question;
+
                 q.options.forEach((option, index) => {
                     const btn = document.createElement("button");
                     btn.classList.add("option-btn");
@@ -230,9 +241,11 @@
                     btn.onclick = () => selectOption(index);
                     optionsEl.appendChild(btn);
                 });
+
                 startTimer();
             }
 
+            // ✅ LIMPA A QUESTÃO
             function resetState() {
                 clearInterval(timer);
                 nextBtn.style.display = "none";
@@ -241,10 +254,12 @@
                 timeEl.textContent = timeLeft;
             }
 
+            // ✅ TIMER
             function startTimer() {
                 timer = setInterval(() => {
                     timeLeft--;
                     timeEl.textContent = timeLeft;
+
                     if (timeLeft <= 0) {
                         clearInterval(timer);
                         disableOptions();
@@ -253,15 +268,19 @@
                 }, 1000);
             }
 
+            // ✅ SELEÇÃO DE ALTERNATIVA
             function selectOption(index) {
                 clearInterval(timer);
+
                 const q = questions[currentQuestion];
                 const buttons = document.querySelectorAll(".option-btn");
+
                 buttons.forEach((btn, i) => {
                     btn.disabled = true;
                     if (i === q.answer) btn.classList.add("correct");
                     else if (i === index) btn.classList.add("wrong");
                 });
+
                 if (index === q.answer) score++;
                 nextBtn.style.display = "inline-block";
             }
@@ -272,23 +291,34 @@
                     .forEach((btn) => (btn.disabled = true));
             }
 
-            nextBtn.addEventListener("click", () => {
+            // ✅ PRÓXIMA QUESTÃO
+            function nextQuestion() {
                 currentQuestion++;
                 if (currentQuestion < questions.length) {
                     showQuestion();
                 } else {
                     showScore();
                 }
-            });
-            function showScore() {
-                clearInterval(timer);
-                document.getElementById("quiz").innerHTML = `
-                  <div class="score">🎯 Você acertou ${score} de ${questions.length} questões!</div>
-                  <button class="restart-btn" id="restart" onclick="window.location.reload();">Reiniciar Quiz</button>
-                `;
             }
 
-            startQuiz();
+            // ✅ PONTUAÇÃO FINAL
+            function showScore() {
+                clearInterval(timer);
+                quizContainer.innerHTML = `
+                <div class="score">
+                    🎯 Você acertou ${score} de ${questions.length} questões!<br>
+                    Visite o estande do curso de Matemática e retire seu brinde 🎉!
+                </div>
+                <button class="restart-btn" id="restart">Reiniciar Quiz</button>
+            `;
+
+                document
+                    .getElementById("restart")
+                    .addEventListener("click", startQuiz);
+            }
+
+            // ✅ Mostra a tela inicial ao abrir a página
+            showIntro();
         </script>
     </body>
 </html>
