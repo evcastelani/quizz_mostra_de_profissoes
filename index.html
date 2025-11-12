@@ -209,7 +209,7 @@
                 quizContainer.innerHTML = `
                 <div class="question" id="question"></div>
                 <div class="options" id="options"></div>
-                <div class="timer">Tempo restante: <span id="time">10</span>s</div>
+                <div class="timer">Tempo restante: <span id="time">15</span>s</div>
                 <button class="next-btn" id="next">Próxima</button>
             `;
 
@@ -250,7 +250,7 @@
                 clearInterval(timer);
                 nextBtn.style.display = "none";
                 optionsEl.innerHTML = "";
-                timeLeft = 10;
+                timeLeft = 15;
                 timeEl.textContent = timeLeft;
             }
 
